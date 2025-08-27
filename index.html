@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            birthday simulator
+        </title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css"/>
+    </head>
+    <body>
+        <!-- Dark overlay with typewriter text -->
+        <div id="overlay">
+            <div id="text"></div>
+            <div id="start-prompt" class="game-prompt">Click to Start</div>
+            <div id="continue-prompt" class="game-prompt hidden">Click to Continue ▼</div>
+        </div>
+
+        <!-- Main content (hidden initially) -->
+        <div id="main-content" class="hidden">
+            <div class="birthday-message">
+                <h1>SURPRISE!!!</h1>
+                <h2>happy birthday - from aleeza</h2>
+            </div>
+            <img id="drawing" src="assets/drawing/drawing.png" alt="Friends Drawing" usemap="#character-map"/>
+            
+            <!-- Image map for clickable characters -->
+            <map name="character-map">
+                <area id="kanwar" shape="rect" coords="1145,545,1225,625" alt="Kanwar" data-video="kanwar-dog.MOV">
+                <area id="nimai" shape="rect" coords="180,530,260,610" alt="Nimai" data-video="nimai-baboon.mov">
+                <area id="prag" shape="rect" coords="980,380,1060,460" alt="Prag" data-video="prag-chimpanzee.MOV">
+                <area id="sukh" shape="rect" coords="550,310,630,390" alt="Sukh" data-video="sukh-otter.MOV">
+                <area id="yogya" shape="rect" coords="760,330,840,410" alt="Yogya" data-video="yogya-eagle.MOV">
+                <area id="aryan" shape="rect" coords="370,400,450,480" alt="Aryan" data-video="aryan-orangatang.MP4">
+                <area id="krish" shape="rect" coords="410,670,490,750" alt="Krish" data-video="krish-monkey.MOV">
+                <area id="aleeza" shape="rect" coords="930,680,1010,760" alt="Aleeza" data-video="aleeza-racoon.MOV">
+            </map>
+
+            <!-- Video player modal -->
+            <div id="video-modal" class="hidden">
+                <div class="modal-content">
+                    <button id="close-video">&times;</button>
+                    <video id="video-player" controls>
+                        Your browser does not support the video element.
+                    </video>
+                    <iframe id="drive-player" class="hidden" 
+                        allow="autoplay" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+</html>
+
