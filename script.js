@@ -260,6 +260,31 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(mainContent, { attributes: true });
 
+// Update image map on window resize
+function updateImageMap() {
+    const drawing = document.getElementById('drawing-lit');
+    if (drawing) {
+        const rect = drawing.getBoundingClientRect();
+        const areas = document.querySelectorAll('area');
+        areas.forEach(area => {
+            const coords = area.getAttribute('coords').split(',');
+            // Convert vw/vh units to actual pixels based on current viewport
+            const newCoords = [
+                (parseFloat(coords[0]) * window.innerWidth / 100),
+                (parseFloat(coords[1]) * window.innerHeight / 100),
+                (parseFloat(coords[2]) * window.innerWidth / 100),
+                (parseFloat(coords[3]) * window.innerHeight / 100)
+            ];
+            area.setAttribute('coords', newCoords.join(','));
+        });
+    }
+}
+
+// Update on resize
+window.addEventListener('resize', updateImageMap);
+// Update on load
+window.addEventListener('load', updateImageMap);
+
 // Close video modal
 closeVideoBtn.addEventListener('click', () => {
     videoModal.classList.remove('visible');
