@@ -159,10 +159,106 @@ document.querySelectorAll('area').forEach(area => {
     });
 });
 
-// Create indicators immediately for testing
-window.addEventListener('load', () => {
-    createClickIndicators();
+// Blow detection setup
+let audioContext;
+let microphoneStream;
+let analyser;
+let isBlowing = false;
+let blowTimeout;
+let blowStartTime = null;
+
+async function setupBlowDetection() {
+    try {
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        microphoneStream = stream;
+        
+        // Set up audio analysis
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        
+        // Configure analyser
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        // Monitor audio levels
+        function checkAudioLevel() {
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Focus on frequencies typical of blowing (low-mid range)
+            const lowFreq = dataArray.slice(0, 50);  // Low frequencies
+            const midFreq = dataArray.slice(50, 150); // Mid frequencies
+            
+            // Calculate averages for different frequency ranges
+            const lowAvg = lowFreq.reduce((a, b) => a + b, 0) / lowFreq.length;
+            const midAvg = midFreq.reduce((a, b) => a + b, 0) / midFreq.length;
+            
+            // Blowing characteristics:
+            // 1. Strong in low frequencies (wind noise)
+            // 2. Moderate in mid frequencies
+            // 3. Sustained for a short duration
+            const isBlowPattern = lowAvg > 60 && midAvg < lowAvg * 0.7;
+            
+            if (isBlowPattern && !isBlowing) {
+                // Start tracking potential blow
+                if (!blowStartTime) {
+                    blowStartTime = Date.now();
+                } else if (Date.now() - blowStartTime > 300) { // Sustained for 300ms
+                    isBlowing = true;
+                    handleBlow();
+                    
+                    // Reset detection
+                    clearTimeout(blowTimeout);
+                    blowTimeout = setTimeout(() => {
+                        isBlowing = false;
+                        blowStartTime = null;
+                    }, 1000);
+                }
+            } else if (!isBlowPattern) {
+                blowStartTime = null;
+            }
+            
+            requestAnimationFrame(checkAudioLevel);
+        }
+        
+        checkAudioLevel();
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+    }
+}
+
+function handleBlow() {
+    console.log('Blow detected!'); // Debug log
+    const litCandles = document.getElementById('drawing-lit');
+    const unlitCandles = document.getElementById('drawing-unlit');
+    
+    if (litCandles && unlitCandles) {
+        console.log('Found both images'); // Debug log
+        litCandles.classList.remove('active');
+        unlitCandles.classList.add('active');
+    } else {
+        console.error('Could not find one or both images');
+    }
+    
+    // Optional: Play blowing out candles sound
+    // const blowSound = new Audio('path/to/blow-sound.mp3');
+    // blowSound.play();
+}
+
+// Set up blow detection when content is revealed
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.target.classList.contains('visible')) {
+            setupBlowDetection();
+            observer.disconnect();
+        }
+    });
 });
+
+observer.observe(mainContent, { attributes: true });
 
 // Close video modal
 closeVideoBtn.addEventListener('click', () => {
