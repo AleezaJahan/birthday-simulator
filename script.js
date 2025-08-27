@@ -140,7 +140,7 @@ document.querySelectorAll('area').forEach(area => {
                 drivePlayer.classList.remove('hidden');
             } else {
                 // Use regular video player for small videos
-                videoPlayer.src = 'assets/videos/' + videoFile;
+                videoPlayer.src = '/birthday-simulator/assets/videos/' + videoFile;
                 videoPlayer.classList.remove('hidden');
                 drivePlayer.classList.add('hidden');
                 
