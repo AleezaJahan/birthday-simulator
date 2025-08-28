@@ -1,4 +1,3 @@
-
 // Messages to display in typewriter effect
 const lines = [
     { text: "shhhh", position: "center"},
@@ -105,26 +104,7 @@ overlay.addEventListener('click', () => {
     }
 });
 
-// Create visual indicators for clickable areas
-function createClickIndicators() {
-    const drawing = document.getElementById('drawing');
-    const mainContent = document.getElementById('main-content');
-    
-    document.querySelectorAll('area').forEach(area => {
-        const coords = area.getAttribute('coords').split(',');
-        const indicator = document.createElement('div');
-        indicator.className = 'click-indicator';
-        indicator.setAttribute('data-name', area.getAttribute('alt'));
-        
-        // Position indicator
-        indicator.style.left = coords[0] + 'px';
-        indicator.style.top = coords[1] + 'px';
-        indicator.style.width = (coords[2] - coords[0]) + 'px';
-        indicator.style.height = (coords[3] - coords[1]) + 'px';
-        
-        mainContent.appendChild(indicator);
-    });
-}
+
 
 // Handle character clicks
 document.querySelectorAll('area').forEach(area => {
@@ -135,7 +115,7 @@ document.querySelectorAll('area').forEach(area => {
             if (driveVideos[videoFile]) {
                 // Use Google Drive embed for large videos
                 const driveId = driveVideos[videoFile];
-                drivePlayer.src = `https://drive.google.com/file/d/${driveId}/preview`;
+                drivePlayer.src = ⁠ https://drive.google.com/file/d/${driveId}/preview ⁠;
                 videoPlayer.classList.add('hidden');
                 drivePlayer.classList.remove('hidden');
             } else {
@@ -259,6 +239,10 @@ const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.target.classList.contains('visible')) {
             setupBlowDetection();
+            // Update image map when content becomes visible
+            setTimeout(() => {
+                updateImageMap();
+            }, 200);
             observer.disconnect();
         }
     });
@@ -266,50 +250,81 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(mainContent, { attributes: true });
 
-// Update image map on window resize
-function updateImageMap() {
-    console.log('Updating image map...');
-    const drawingLit = document.getElementById('drawing-lit');
-    const drawingUnlit = document.getElementById('drawing-unlit');
-    
-    if (drawingLit && drawingUnlit) {
-        // Use whichever drawing is currently visible
-        const drawing = drawingLit.classList.contains('active') ? drawingLit : drawingUnlit;
-        const rect = drawing.getBoundingClientRect();
-        console.log('Image dimensions:', rect.width, rect.height);
-        
-        // Get all clickable areas
-        const areas = document.querySelectorAll('area');
-        
-        areas.forEach(area => {
-            const originalCoords = area.getAttribute('coords').split(',').map(Number);
-            console.log('Original coords for ' + area.id + ':', originalCoords);
-            
-            // Calculate scale based on actual image size vs original coordinates
-            const scaleX = rect.width / 2816;  // Original width
-            const scaleY = rect.height / 1536; // Original height
-            
-            // Scale coordinates
-            const newCoords = [
-                Math.round(originalCoords[0] * scaleX),
-                Math.round(originalCoords[1] * scaleY),
-                Math.round(originalCoords[2] * scaleX),
-                Math.round(originalCoords[3] * scaleY)
-            ];
-            
-            console.log('New coords for ' + area.id + ':', newCoords);
-            area.setAttribute('coords', newCoords.join(','));
-        });
-    }
+// Store original coordinates on first load
+function storeOriginalCoordinates() {
+    document.querySelectorAll('area').forEach(area => {
+        const coords = area.getAttribute('coords');
+        if (coords && !area.hasAttribute('data-original-coords')) {
+            area.setAttribute('data-original-coords', coords);
+        }
+    });
 }
 
-// Add click logging to help debug
-document.addEventListener('click', function(e) {
-    const rect = document.querySelector('#drawing-lit, #drawing-unlit').getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    console.log('Click at:', x, y);
-});
+// Update image map on window resize
+function updateImageMap() {
+    const drawingLit = document.getElementById('drawing-lit');
+    if (!drawingLit) return;
+    
+    const areas = document.querySelectorAll('area');
+    if (areas.length === 0) return;
+    
+    // Ensure we have original coordinates stored
+    storeOriginalCoordinates();
+    
+    // Original image dimensions
+    const ORIGINAL_WIDTH = 2816;
+    const ORIGINAL_HEIGHT = 1536;
+    
+    // Get the container dimensions
+    const container = drawingLit.parentElement;
+    const containerRect = container.getBoundingClientRect();
+    
+    // Use container dimensions, or fallback to viewport if container isn't ready
+    let containerWidth = containerRect.width || window.innerWidth;
+    let containerHeight = containerRect.height || window.innerHeight;
+    
+    // Calculate how the image is actually displayed with object-fit: contain
+    const containerAspect = containerWidth / containerHeight;
+    const imageAspect = ORIGINAL_WIDTH / ORIGINAL_HEIGHT;
+    
+    let displayedWidth, displayedHeight, offsetX, offsetY;
+    
+    if (containerAspect > imageAspect) {
+        // Container is wider than image aspect ratio - image is constrained by height
+        displayedHeight = containerHeight;
+        displayedWidth = displayedHeight * imageAspect;
+        offsetX = (containerWidth - displayedWidth) / 2;
+        offsetY = 0;
+    } else {
+        // Container is taller than image aspect ratio - image is constrained by width
+        displayedWidth = containerWidth;
+        displayedHeight = displayedWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - displayedHeight) / 2;
+    }
+    
+    // Calculate scale factor (doubled for better visibility)
+    const scaleX = (displayedWidth / ORIGINAL_WIDTH) * 2.0;
+    const scaleY = (displayedHeight / ORIGINAL_HEIGHT) * 2.0;
+    
+    // Update each area's coordinates
+    areas.forEach(area => {
+        const originalCoords = area.getAttribute('data-original-coords');
+        if (!originalCoords) return;
+        
+        const coordValues = originalCoords.split(',').map(Number);
+        if (coordValues.length < 4) return;
+        
+        const newCoords = [
+            Math.round(offsetX + (coordValues[0] * scaleX)),
+            Math.round(offsetY + (coordValues[1] * scaleY)),
+            Math.round(offsetX + (coordValues[2] * scaleX)),
+            Math.round(offsetY + (coordValues[3] * scaleY))
+        ];
+        
+        area.setAttribute('coords', newCoords.join(','));
+    });
+}
 
 // Update on resize
 window.addEventListener('resize', updateImageMap);
