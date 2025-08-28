@@ -268,41 +268,48 @@ observer.observe(mainContent, { attributes: true });
 
 // Update image map on window resize
 function updateImageMap() {
+    console.log('Updating image map...');
     const drawingLit = document.getElementById('drawing-lit');
     const drawingUnlit = document.getElementById('drawing-unlit');
+    
     if (drawingLit && drawingUnlit) {
         // Use whichever drawing is currently visible
         const drawing = drawingLit.classList.contains('active') ? drawingLit : drawingUnlit;
         const rect = drawing.getBoundingClientRect();
+        console.log('Image dimensions:', rect.width, rect.height);
+        
+        // Get all clickable areas
         const areas = document.querySelectorAll('area');
-        
-        // Original image dimensions
-        const ORIGINAL_WIDTH = 2816;
-        const ORIGINAL_HEIGHT = 1536;
-        
-        // Get the actual displayed image dimensions
-        const displayedRect = drawing.getBoundingClientRect();
-        const scale = Math.min(
-            displayedRect.width / ORIGINAL_WIDTH,
-            displayedRect.height / ORIGINAL_HEIGHT
-        );
-        
-        // Calculate offsets to center the image
-        const offsetX = (displayedRect.width - (ORIGINAL_WIDTH * scale)) / 2;
-        const offsetY = (displayedRect.height - (ORIGINAL_HEIGHT * scale)) / 2;
         
         areas.forEach(area => {
             const originalCoords = area.getAttribute('coords').split(',').map(Number);
+            console.log('Original coords for ' + area.id + ':', originalCoords);
+            
+            // Calculate scale based on actual image size vs original coordinates
+            const scaleX = rect.width / 2816;  // Original width
+            const scaleY = rect.height / 1536; // Original height
+            
+            // Scale coordinates
             const newCoords = [
-                offsetX + (originalCoords[0] * scale),
-                offsetY + (originalCoords[1] * scale),
-                offsetX + (originalCoords[2] * scale),
-                offsetY + (originalCoords[3] * scale)
+                Math.round(originalCoords[0] * scaleX),
+                Math.round(originalCoords[1] * scaleY),
+                Math.round(originalCoords[2] * scaleX),
+                Math.round(originalCoords[3] * scaleY)
             ];
+            
+            console.log('New coords for ' + area.id + ':', newCoords);
             area.setAttribute('coords', newCoords.join(','));
         });
     }
 }
+
+// Add click logging to help debug
+document.addEventListener('click', function(e) {
+    const rect = document.querySelector('#drawing-lit, #drawing-unlit').getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    console.log('Click at:', x, y);
+});
 
 // Update on resize
 window.addEventListener('resize', updateImageMap);
