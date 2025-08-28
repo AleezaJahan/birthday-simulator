@@ -191,22 +191,28 @@ async function setupBlowDetection() {
             // Focus on frequencies typical of blowing (low-mid range)
             const lowFreq = dataArray.slice(0, 50);  // Low frequencies
             const midFreq = dataArray.slice(50, 150); // Mid frequencies
+            const highFreq = dataArray.slice(150, 250); // High frequencies
             
             // Calculate averages for different frequency ranges
             const lowAvg = lowFreq.reduce((a, b) => a + b, 0) / lowFreq.length;
             const midAvg = midFreq.reduce((a, b) => a + b, 0) / midFreq.length;
+            const highAvg = highFreq.reduce((a, b) => a + b, 0) / highFreq.length;
             
             // Blowing characteristics:
-            // 1. Strong in low frequencies (wind noise)
-            // 2. Moderate in mid frequencies
-            // 3. Sustained for a short duration
-            const isBlowPattern = lowAvg > 60 && midAvg < lowAvg * 0.7;
+            // 1. Very strong in low frequencies (wind noise)
+            // 2. Lower in mid frequencies
+            // 3. Very low in high frequencies
+            // 4. Requires more force
+            const isBlowPattern = lowAvg > 120 && // Increased threshold
+                                midAvg < lowAvg * 0.6 && // Stricter ratio
+                                highAvg < lowAvg * 0.3 && // Check high frequencies
+                                lowAvg > 150; // Additional force check
             
             if (isBlowPattern && !isBlowing) {
                 // Start tracking potential blow
                 if (!blowStartTime) {
                     blowStartTime = Date.now();
-                } else if (Date.now() - blowStartTime > 300) { // Sustained for 300ms
+                } else if (Date.now() - blowStartTime > 500) { // Sustained for 500ms
                     isBlowing = true;
                     handleBlow();
                     
@@ -262,8 +268,11 @@ observer.observe(mainContent, { attributes: true });
 
 // Update image map on window resize
 function updateImageMap() {
-    const drawing = document.getElementById('drawing-lit');
-    if (drawing) {
+    const drawingLit = document.getElementById('drawing-lit');
+    const drawingUnlit = document.getElementById('drawing-unlit');
+    if (drawingLit && drawingUnlit) {
+        // Use whichever drawing is currently visible
+        const drawing = drawingLit.classList.contains('active') ? drawingLit : drawingUnlit;
         const rect = drawing.getBoundingClientRect();
         const areas = document.querySelectorAll('area');
         
