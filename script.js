@@ -115,7 +115,7 @@ document.querySelectorAll('area').forEach(area => {
             if (driveVideos[videoFile]) {
                 // Use Google Drive embed for large videos
                 const driveId = driveVideos[videoFile];
-                drivePlayer.src = ⁠ https://drive.google.com/file/d/${driveId}/preview ⁠;
+                drivePlayer.src = `https://drive.google.com/file/d/${driveId}/preview`;
                 videoPlayer.classList.add('hidden');
                 drivePlayer.classList.remove('hidden');
             } else {
