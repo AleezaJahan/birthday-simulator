@@ -74,12 +74,22 @@ body {
 #drawing-unlit {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;  /* Changed to contain to maintain aspect ratio */
     position: absolute;
     top: 0;
     left: 0;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
+}
+
+/* Add pointer cursor for clickable areas */
+area {
+    cursor: pointer;
+}
+
+/* Make sure the image map container preserves aspect ratio */
+#drawing-container {
+    aspect-ratio: 2816/1536;
 }
 
 #drawing-lit.active,

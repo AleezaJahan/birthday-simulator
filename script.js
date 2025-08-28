@@ -266,14 +266,35 @@ function updateImageMap() {
     if (drawing) {
         const rect = drawing.getBoundingClientRect();
         const areas = document.querySelectorAll('area');
+        
+        // Calculate the actual dimensions of the displayed image
+        const imageAspectRatio = 2816 / 1536;
+        const containerAspectRatio = rect.width / rect.height;
+        
+        let imageWidth, imageHeight, offsetX, offsetY;
+        
+        if (containerAspectRatio > imageAspectRatio) {
+            // Image is height-constrained
+            imageHeight = rect.height;
+            imageWidth = imageHeight * imageAspectRatio;
+            offsetX = (rect.width - imageWidth) / 2;
+            offsetY = 0;
+        } else {
+            // Image is width-constrained
+            imageWidth = rect.width;
+            imageHeight = imageWidth / imageAspectRatio;
+            offsetX = 0;
+            offsetY = (rect.height - imageHeight) / 2;
+        }
+        
         areas.forEach(area => {
             const coords = area.getAttribute('coords').split(',');
-            // Convert vw/vh units to actual pixels based on current viewport
+            // Convert percentages to actual pixels
             const newCoords = [
-                (parseFloat(coords[0]) * window.innerWidth / 100),
-                (parseFloat(coords[1]) * window.innerHeight / 100),
-                (parseFloat(coords[2]) * window.innerWidth / 100),
-                (parseFloat(coords[3]) * window.innerHeight / 100)
+                offsetX + (parseFloat(coords[0]) * imageWidth / 100),
+                offsetY + (parseFloat(coords[1]) * imageHeight / 100),
+                offsetX + (parseFloat(coords[2]) * imageWidth / 100),
+                offsetY + (parseFloat(coords[3]) * imageHeight / 100)
             ];
             area.setAttribute('coords', newCoords.join(','));
         });
