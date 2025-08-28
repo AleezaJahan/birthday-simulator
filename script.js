@@ -267,34 +267,28 @@ function updateImageMap() {
         const rect = drawing.getBoundingClientRect();
         const areas = document.querySelectorAll('area');
         
-        // Calculate the actual dimensions of the displayed image
-        const imageAspectRatio = 2816 / 1536;
-        const containerAspectRatio = rect.width / rect.height;
+        // Original image dimensions
+        const ORIGINAL_WIDTH = 2816;
+        const ORIGINAL_HEIGHT = 1536;
         
-        let imageWidth, imageHeight, offsetX, offsetY;
+        // Get the actual displayed image dimensions
+        const displayedRect = drawing.getBoundingClientRect();
+        const scale = Math.min(
+            displayedRect.width / ORIGINAL_WIDTH,
+            displayedRect.height / ORIGINAL_HEIGHT
+        );
         
-        if (containerAspectRatio > imageAspectRatio) {
-            // Image is height-constrained
-            imageHeight = rect.height;
-            imageWidth = imageHeight * imageAspectRatio;
-            offsetX = (rect.width - imageWidth) / 2;
-            offsetY = 0;
-        } else {
-            // Image is width-constrained
-            imageWidth = rect.width;
-            imageHeight = imageWidth / imageAspectRatio;
-            offsetX = 0;
-            offsetY = (rect.height - imageHeight) / 2;
-        }
+        // Calculate offsets to center the image
+        const offsetX = (displayedRect.width - (ORIGINAL_WIDTH * scale)) / 2;
+        const offsetY = (displayedRect.height - (ORIGINAL_HEIGHT * scale)) / 2;
         
         areas.forEach(area => {
-            const coords = area.getAttribute('coords').split(',');
-            // Convert percentages to actual pixels
+            const originalCoords = area.getAttribute('coords').split(',').map(Number);
             const newCoords = [
-                offsetX + (parseFloat(coords[0]) * imageWidth / 100),
-                offsetY + (parseFloat(coords[1]) * imageHeight / 100),
-                offsetX + (parseFloat(coords[2]) * imageWidth / 100),
-                offsetY + (parseFloat(coords[3]) * imageHeight / 100)
+                offsetX + (originalCoords[0] * scale),
+                offsetY + (originalCoords[1] * scale),
+                offsetX + (originalCoords[2] * scale),
+                offsetY + (originalCoords[3] * scale)
             ];
             area.setAttribute('coords', newCoords.join(','));
         });
